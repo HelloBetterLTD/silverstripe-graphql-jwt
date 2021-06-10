@@ -18,6 +18,18 @@ trait HeaderExtractor
     protected function getAuthorizationHeader(HTTPRequest $request): ?string
     {
         $authHeader = $request->getHeader('Authorization');
+        if (empty($authHeader)) {
+            $possibleAuthVars = [
+                'HTTP_AUTHORIZATION',
+                'REDIRECT_HTTP_AUTHORIZATION'
+            ];
+            foreach ($possibleAuthVars as $servervar) {
+                if (isset($_SERVER[$servervar]) && preg_match('/Bearer\s+(.*)$/i', $_SERVER[$servervar])) {
+                    $authHeader = $_SERVER[$servervar];
+                    break;
+                }
+            }
+        }
         if ($authHeader && preg_match('/Bearer\s+(?<token>.*)$/i', $authHeader, $matches)) {
             return $matches['token'];
         }
